@@ -1,0 +1,66 @@
+version: "3"
+
+services:
+
+  pgadmin4:
+    image: dpage/pgadmin4
+    container_name: "pgadmin4"
+    user: root
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@mail.ru"
+      PGADMIN_DEFAULT_PASSWORD: "pass"
+    ports:
+      - "30001:80"
+    volumes:
+      - ./volumes/pgadmin4:/var/lib/pgadmin
+
+  postgres:
+    image: postgres:14
+    container_name: "postgres"
+    user: root
+    environment:
+      POSTGRES_PASSWORD: "password"
+    ports:
+      - "30002:5432"
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data
+
+  chartmuseum:
+    image: ghcr.io/helm/chartmuseum:v0.14.0
+    container_name: "chartmuseum"
+    environment:
+      STORAGE: "local"
+      STORAGE_LOCAL_ROOTDIR: "/charts"
+      DEBUG: "1"
+    ports:
+      - "30003:8080"
+    volumes:
+      - ./volumes/chartmuseum:/charts
+
+  pgbouncer:
+    image: bitnami/pgbouncer
+    container_name: "pgbouncer"
+    environment:
+      PGBOUNCER_AUTH_TYPE: "plain"
+
+      POSTGRESQL_USERNAME: "postgres"
+      POSTGRESQL_PASSWORD: "password"
+      POSTGRESQL_DATABASE: "pca"
+      POSTGRESQL_HOST: "postgres"
+      POSTGRESQL_PORT: "5432"
+
+      PGBOUNCER_POOL_MODE: "statement"
+    ports:
+      - "30004:6432"
+    volumes:
+      - ./volumes/pgbouncer:/bitnami/pgbouncer/conf/
+
+  # pgbouncer:
+  #   image: edoburu/pgbouncer
+  #   container_name: "pgbouncer"
+  #   environment:
+  #     DATABASE_URL: "postgres://postgres:password@postgres:5432/pca"
+  #   ports:
+  #     - "30004:5432"
+  #   volumes:
+  #     - ./volumes/pgbouncer:/etc/pgbouncer
